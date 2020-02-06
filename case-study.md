@@ -469,6 +469,41 @@ Finished in 0.002446s, 408.8307 runs/s, 408.8307 assertions/s.
 
 - Пробуем запустить на большом файле и видим, что до сих пор время его выполнения намного больше 30 секунд
 
+### Ваша находка №3
+- Так как предыдущая метрика у нас уже выполнилась достигла бюджета, а в исходную задачу мы не решили введем новый бюджет. Для этого напишем тест
+  Изначально результат такой:
+  ```
+  1) task-1 work for normal file perform under 1000 ms
+     Failure/Error: expect {work('data2.txt') }.to perform_under(1000).ms.warmup(2).sample(5)
+       expected block to perform under 1000 ms, but performed above 1.91 sec (± 31.6 ms)
+     # ./spec/task_1_spec.rb:13:in `block (3 levels) in <top (required)>'
+  ```
+- Возьмем rbspy и посмотрим что его отчет. Как мы видим все время работы проходит в блоке в методе work. Чтобы конкретно понять в каком из блоков затрачивается больше всего времени возьмем и разнесем код на функции. В результате видим:
+    ```
+    % self  % total  name
+    99.12    99.96  block in collect_users_objects - task-1.rb
+    0.80   100.00  <c function> - unknown
+    0.08     0.08  initialize - task-1.rb
+    0.00   100.00  work - task-1.rb
+    0.00   100.00  collect_users_objects - task-1.rb
+    0.00   100.00  <main> - task-1.rb
+    ```
+    Значит проблема в методе collect_users_objects
+- Возьмем ruby-prof call_stack профилировщик и посмотрим отчет и увидим что проблема в each, но не в методе class#new. Выборка из словаря по ключу происходит быстро значит проблема в строке `users_objects = users_objects + [user_object]`. Переделаем ее в `users_objects << user_object`. И получаем:
+    ```
+     1) task-1 work for normal file perform under 1000 ms
+     Failure/Error: expect {work('data2.txt') }.to perform_under(1000).ms.warmup(2).sample(5)
+       expected block to perform under 1 sec, but performed above 1.01 sec (± 31.1 ms)
+     # ./spec/task_1_spec.rb:13:in `block (3 levels) in <top (required)>'
+    ```
+    Отлично! Мы почти добились линейности. Добавим еще одну метрику на исходный файл в задаче и проверим на сколько мы укладываемся в бюджет.
+    ```
+    task-1 work for large file perform under 30 ms
+     Failure/Error: expect {work('data_large.txt') }.to perform_under(30).sec.warmup(2).sample(5)
+       expected block to perform under 30 sec, but performed above 96.7 sec (± 6.65 sec)
+     # ./spec/task_1_spec.rb:18:in `block (3 levels) in <top (required)>
+    ```
+
 ## Результаты
 В результате проделанной оптимизации наконец удалось обработать файл с данными.
 Удалось улучшить метрику системы с *того, что у вас было в начале, до того, что получилось в конце* и уложиться в заданный бюджет.
