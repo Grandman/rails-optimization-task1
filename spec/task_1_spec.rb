@@ -18,6 +18,4 @@ describe 'task-1' do
       expect {work('data_large.txt') }.to perform_under(30).sec.warmup(2).sample(5)
     end
   end
-
 end
-

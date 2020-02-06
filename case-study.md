@@ -503,6 +503,60 @@ Finished in 0.002446s, 408.8307 runs/s, 408.8307 assertions/s.
        expected block to perform under 30 sec, but performed above 96.7 sec (± 6.65 sec)
      # ./spec/task_1_spec.rb:18:in `block (3 levels) in <top (required)>
     ```
+### Ваша находка №4
+- Снова обратимся в stackprof предварительно разбив программу на методы. Находим самый долгий метод
+    ```
+    ==================================
+      Mode: wall(1000)
+      Samples: 30917 (9.84% miss rate)
+      GC: 0 (0.00%)
+    ==================================
+     TOTAL    (pct)     SAMPLES    (pct)     FRAME
+     30917 (100.0%)        8781  (28.4%)     Object#work
+      5351  (17.3%)        5351  (17.3%)     Object#write_file
+      9662  (31.3%)        4601  (14.9%)     Object#parse_lines
+      3947  (12.8%)        3947  (12.8%)     Object#parse_session
+     10416  (33.7%)        2428   (7.9%)     Object#collect_stats_from_users
+      1727   (5.6%)        1727   (5.6%)     Object#calc_all_browsers
+      2965   (9.6%)        1707   (5.5%)     Object#collect_users_objects
+      1258   (4.1%)        1258   (4.1%)     User#initialize
+      1114   (3.6%)        1114   (3.6%)     Object#parse_user
+         3   (0.0%)           3   (0.0%)     Object#read_lines
+     30917 (100.0%)           0   (0.0%)     block in <main>
+     30917 (100.0%)           0   (0.0%)     <main>
+     30917 (100.0%)           0   (0.0%)     <main>
+    ```
+    Видим что `collect_stats_from_users` все еще занимает больше всего времени. Рефакторим и получаем:
+
+    ```
+    ==================================
+      Mode: wall(1000)
+      Samples: 26652 (10.34% miss rate)
+      GC: 0 (0.00%)
+    ==================================
+     TOTAL    (pct)     SAMPLES    (pct)     FRAME
+      7068  (26.5%)        7068  (26.5%)     Object#collect_stats_from_user
+      4775  (17.9%)        4775  (17.9%)     Object#write_file
+      9522  (35.7%)        4578  (17.2%)     Object#parse_lines
+      3839  (14.4%)        3839  (14.4%)     Object#parse_session
+      2699  (10.1%)        1571   (5.9%)     Object#collect_users_objects
+      1564   (5.9%)        1564   (5.9%)     Object#calc_all_browsers
+      1128   (4.2%)        1128   (4.2%)     User#initialize
+      1105   (4.1%)        1105   (4.1%)     Object#parse_user
+     26652 (100.0%)         755   (2.8%)     Object#work
+      7334  (27.5%)         266   (1.0%)     Object#collect_stats_from_users
+         3   (0.0%)           3   (0.0%)     Object#read_lines
+     26652 (100.0%)           0   (0.0%)     <main>
+     26652 (100.0%)           0   (0.0%)     <main>
+     26652 (100.0%)           0   (0.0%)     block in <main>
+    ```
+
+    ```
+    Failure/Error: expect {work('data_large.txt') }.to perform_under(30).sec.warmup(2).sample(5)
+       expected block to perform under 30 sec, but performed above 93.6 sec (± 990 ms)
+     # ./spec/task_1_spec.rb:18:in `block (3 levels) in <top (required)>'
+    ```
+
 
 ## Результаты
 В результате проделанной оптимизации наконец удалось обработать файл с данными.
