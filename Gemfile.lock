@@ -32,6 +32,7 @@ GEM
     rspec-support (3.9.2)
     ruby-prof (1.2.0)
     slop (3.6.0)
+    stackprof (0.2.15)
 
 PLATFORMS
   ruby
@@ -42,6 +43,7 @@ DEPENDENCIES
   rspec
   rspec-benchmark
   ruby-prof
+  stackprof
 
 BUNDLED WITH
    2.0.2
