@@ -4,6 +4,6 @@ result = RubyProf.profile do
   work('data_large.txt')
 end
 
-printer = RubyProf::CallStackPrinter.new(result)
+printer = RubyProf::GraphPrinter.new(result)
 printer.print(STDOUT, {})
 

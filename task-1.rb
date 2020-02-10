@@ -4,6 +4,7 @@ require 'json'
 require 'pry'
 require 'date'
 require 'ruby-prof'
+require 'oj'
 
 class User
   attr_reader :attributes, :sessions
@@ -116,7 +117,10 @@ def calc_all_browsers(sessions)
 end
 
 def write_file(filename, report)
-  File.write('result.json', "#{report.to_json}\n")
+  lines = Oj.dump(report)
+  File.open('result.json', 'wb') do |f|
+    f.puts lines
+  end
 end
 
 def work(file)
@@ -142,7 +146,7 @@ def work(file)
 
   report = {}
 
-  report[:totalUsers] = users.count
+  report['totalUsers'] = users.count
 
   # Подсчёт количества уникальных браузеров
   uniqueBrowsers = sessions.map { |session| session['browser'] }.uniq

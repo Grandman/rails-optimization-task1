@@ -8,6 +8,7 @@ GEM
     diff-lcs (1.3)
     method_source (0.8.2)
     minitest (5.11.3)
+    oj (3.10.2)
     pry (0.10.4)
       coderay (~> 1.1.0)
       method_source (~> 0.8.1)
@@ -39,6 +40,7 @@ PLATFORMS
 
 DEPENDENCIES
   minitest
+  oj
   pry
   rspec
   rspec-benchmark

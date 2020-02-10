@@ -556,6 +556,11 @@ Finished in 0.002446s, 408.8307 runs/s, 408.8307 assertions/s.
        expected block to perform under 30 sec, but performed above 93.6 sec (± 990 ms)
      # ./spec/task_1_spec.rb:18:in `block (3 levels) in <top (required)>'
     ```
+### Ваша находка №5
+- ruby-prof в режиме call stack на файле data1.txt показал наибольшую точку роста в методе write_file
+  Воспользуемся более быстрой генерацией json с использованием гема oj, и переделаем File.write в File.open() с модификатором 'wb'
+  после всех переделок метод write_file занимает всего 8% против 40 изначальных
+  Время обработки файла data_large.txt так и осталось 90 sec
 
 
 ## Результаты
