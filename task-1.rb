@@ -32,8 +32,8 @@ def parse_session(fields)
   parsed_result = {
     'user_id' => fields[1],
     'session_id' => fields[2],
-    'browser' => fields[3],
-    'time' => fields[4],
+    'browser' => fields[3].upcase,
+    'time' => fields[4].to_i,
     'date' => fields[5],
   }
 end
@@ -48,27 +48,30 @@ def collect_stats_from_users(report, users_objects)
 end
 
 def collect_stats_from_user(user)
-  times = user.sessions.map{|s| s['time'].to_i}
-  browsers = user.sessions.map {|s| s['browser'].upcase}.sort
-
+  times = []
+  browsers = []
   used_ie = false
   allways_used_chrome = true
-
-  browsers.each do |browser|
-    used_ie = true if browser.match?(/INTERNET EXPLORER/)
-    allways_used_chrome = false unless browser.match?(/CHROME/)
-
-    break if used_ie && !allways_used_chrome
+  user.sessions.each do |s|
+    times << s['time']
+    browsers << s['browser']
+    unless used_ie
+      used_ie = true if s['browser'].match?(/INTERNET EXPLORER/)
+    end
+    if allways_used_chrome
+      allways_used_chrome = false unless s['browser'].match?(/CHROME/)
+    end
   end
+
 
   {
     'sessionsCount' => user.sessions.count,
     # Собираем количество времени по пользователям
-    'totalTime' => times.sum.to_s + ' min.',
+    'totalTime' => times.sum.to_s << ' min.',
     # Выбираем самую длинную сессию пользователя
-    'longestSession' => times.max.to_s + ' min.',
+    'longestSession' => times.max.to_s << ' min.',
     # Браузеры пользователя через запятую
-    'browsers' => browsers.join(', '),
+    'browsers' => browsers.sort.join(', '),
     # Хоть раз использовал IE?
     'usedIE' => used_ie,
     # Всегда использовал только Chrome?
@@ -110,7 +113,6 @@ end
 def calc_all_browsers(sessions)
   sessions
     .map { |s| s['browser'] }
-    .map { |b| b.upcase }
     .sort
     .uniq
     .join(',')
